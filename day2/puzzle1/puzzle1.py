@@ -20,7 +20,7 @@ def distanceDif(lst): # at least one and at most three backward and forward
 with open(inputDir) as f:
     for line in f:
         # split by any whitespace and parse integers
-        parts = list(map(int, line.split()))
+        parts = list(map(int, line.split())) # turn strings into ints
         if sorted(parts) == parts and notDoubleNumber(parts) and distanceDif(parts):
             total += 1
         elif sorted(parts, reverse=True) == parts and notDoubleNumber(parts) and distanceDif(parts):
