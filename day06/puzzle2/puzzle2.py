@@ -1,12 +1,12 @@
 import os
 import copy
 
-inputDir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "testinput.txt")
+inputDir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "input.txt")
 
 total = 0
 loopTotal = 0
-uniquePoses = set()
 direction = 0  # 0 = north, 1 = east, 2 = south, 3 = west
+pos = None
 
 def rotate():
     global direction
@@ -15,75 +15,66 @@ def rotate():
 def checkHit(x, y, nestedArray):
     if y < 0 or x < 0 or y >= len(nestedArray) or x >= len(nestedArray[0]):
         return "out_of_range"
-    if nestedArray[y][x] == '#':
-        return "wall"
-    return False
+    return "wall" if nestedArray[y][x] == '#' else False
 
-def movement(nestedArray):  # pos movement
-    global direction
-    pos = [(ix, iy) for ix, row in enumerate(nestedArray) for iy, i in enumerate(row) if i == '^'][0]  # find the position of the starting point
+def movement(nestedArray):
+    global pos, direction
     y, x = pos
-    for _ in range(4):  # try all four directions
-        if direction == 0:
-            newX, newY = x, y - 1
-        elif direction == 1:
-            newX, newY = x + 1, y
-        elif direction == 2:
-            newX, newY = x, y + 1
-        elif direction == 3:
-            newX, newY = x - 1, y
 
-        if checkHit(newX, newY, nestedArray) == "out_of_range":
+    for _ in range(4):  # try all four directions
+        match direction:
+            case 0: newX, newY = x, y - 1
+            case 1: newX, newY = x + 1, y
+            case 2: newX, newY = x, y + 1
+            case 3: newX, newY = x - 1, y
+
+        hitResult = checkHit(newX, newY, nestedArray)
+        if hitResult == "out_of_range":
             return None
-        if checkHit(newX, newY, nestedArray) != "wall":
-            nestedArray[y][x] = '.'  # replace old position with a '.'
-            nestedArray[newY][newX] = '^'  # put a '^' in the new position
+        if hitResult != "wall":
+            # move to new pos
+            nestedArray[y][x] = '.'  # replace old pos
+            nestedArray[newY][newX] = '^'  # mark new pos
+            pos = (newY, newX)  # update pos
             return newX, newY
         else:
             rotate()
-    return None  # if all directions are blocked, return None
+    return None  # all directions blocked
 
 def detectInfiniteLoop(mappedNumbers, blockedX, blockedY):
-    global total, uniquePoses, direction
-
-    # Reset global variables
-    total = 0
-    uniquePoses = set()
-    direction = 0
-
-    # Create a copy of the mappedNumbers array
+    global direction, pos
+    direction = 0 # reset
+    # copy
     mappedNumbersCopy = copy.deepcopy(mappedNumbers)
-
-    previousPositions = set()
-
-    # Set the blocked position
     if 0 <= blockedY < len(mappedNumbersCopy) and 0 <= blockedX < len(mappedNumbersCopy[0]):
         mappedNumbersCopy[blockedY][blockedX] = '#'
 
+    pos = next((ix, iy) for ix, row in enumerate(mappedNumbersCopy) for iy, val in enumerate(row) if val == '^')
+
+    visited_states = set()
     while True:
+        current_state = (pos[0], pos[1], direction)
+        if current_state in visited_states:
+            return True
+        visited_states.add(current_state)
+
         result = movement(mappedNumbersCopy)
         if result is None:
             break
-        x, y = result
-
-        # Detect infinite loop
-        if (x, y, direction) in previousPositions:
-            return True
-
-        previousPositions.add((x, y, direction))
-        uniquePoses.add((x, y, direction))
-        total = len(uniquePoses)
-
     return False
+
+def findLoops(mappedNumbers):
+    global loopTotal
+    for y in range(len(mappedNumbers)):
+        for x in range(len(mappedNumbers[y])):
+            if mappedNumbers[y][x] == '.':  # Check all open positions
+                if detectInfiniteLoop(mappedNumbers, x, y):
+                    print(f"Loop detected at position ({x}, {y})")
+                    loopTotal += 1
 
 with open(inputDir, 'r') as f:
     lines = f.read().strip().split('\n')
-
     mappedNumbers = [list(line) for line in lines]
 
-    for y in range(len(mappedNumbers)):
-        for x in range(len(mappedNumbers[y])):
-            if mappedNumbers[y][x] == '.':
-                if detectInfiniteLoop(mappedNumbers, x, y):
-                    loopTotal += 1
+findLoops(mappedNumbers)
 print(loopTotal)
