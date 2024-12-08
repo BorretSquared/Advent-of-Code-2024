@@ -15,13 +15,13 @@ def rotate():
 def checkHit(x, y, nestedArray):
     if y < 0 or x < 0 or y >= len(nestedArray) or x >= len(nestedArray[0]):
         return "out_of_range"
-    if nestedArray[y][x] == 1:
+    if nestedArray[y][x] == '#':
         return "wall"
     return False
 
 def movement(nestedArray):  # pos movement
     global direction
-    pos = [(ix, iy) for ix, row in enumerate(nestedArray) for iy, i in enumerate(row) if i == 2][0]  # find the position of the starting point
+    pos = [(ix, iy) for ix, row in enumerate(nestedArray) for iy, i in enumerate(row) if i == '^'][0]  # find the position of the starting point
     y, x = pos
     for _ in range(4):  # try all four directions
         if direction == 0:
@@ -36,8 +36,8 @@ def movement(nestedArray):  # pos movement
         if checkHit(newX, newY, nestedArray) == "out_of_range":
             return None
         if checkHit(newX, newY, nestedArray) != "wall":
-            nestedArray[y][x] = 0  # replace old position with a 0
-            nestedArray[newY][newX] = 2  # put a 2 in the new position
+            nestedArray[y][x] = '.'  # replace old position with a '.'
+            nestedArray[newY][newX] = '^'  # put a '^' in the new position
             return newX, newY
         else:
             rotate()
@@ -58,7 +58,7 @@ def detectInfiniteLoop(mappedNumbers, blockedX, blockedY):
 
     # Set the blocked position
     if 0 <= blockedY < len(mappedNumbersCopy) and 0 <= blockedX < len(mappedNumbersCopy[0]):
-        mappedNumbersCopy[blockedY][blockedX] = 1
+        mappedNumbersCopy[blockedY][blockedX] = '#'
 
     while True:
         result = movement(mappedNumbersCopy)
@@ -78,16 +78,12 @@ def detectInfiniteLoop(mappedNumbers, blockedX, blockedY):
 
 with open(inputDir, 'r') as f:
     lines = f.read().strip().split('\n')
-    symbolToNumber = {'.': 0, '#': 1, '^': 2}
 
-    mappedNumbers = []
-    for line in lines:
-        mappedLine = [symbolToNumber[char] for char in line]
-        mappedNumbers.append(mappedLine)
+    mappedNumbers = [list(line) for line in lines]
 
     for y in range(len(mappedNumbers)):
         for x in range(len(mappedNumbers[y])):
-            if mappedNumbers[y][x] == 0:
+            if mappedNumbers[y][x] == '.':
                 if detectInfiniteLoop(mappedNumbers, x, y):
                     loopTotal += 1
 print(loopTotal)
