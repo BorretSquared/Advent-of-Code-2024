@@ -1,4 +1,3 @@
-from collections import deque
 import os
 
 input =  open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "input.txt")).read().strip().split('\n')
@@ -9,13 +8,13 @@ def findTrailheadScores(topographicMap):
         return 0 <= x < rows and 0 <= y < cols and (x, y) not in visited
 
     def bfsTrailhead(startX, startY):
-        queue = deque([(startX, startY)])
+        queue = [(startX, startY)]
         visitedInBfs = set()
         visitedInBfs.add((startX, startY))
 
         reachableNines = set()
         while queue:
-            x, y = queue.popleft()
+            x, y = queue.pop(0)
 
             for dx, dy in directions:
                 nx, ny = x + dx, y + dy
